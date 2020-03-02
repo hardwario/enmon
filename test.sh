@@ -9,5 +9,5 @@ do
     echo "Counter: $counter"
     ./enmon
     counter=$((counter+1))
-    sleep 1
+    sleep 0.1
 done

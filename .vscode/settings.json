@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "iohidkeys.h": "c",
+        "type_traits": "c"
+    }
+}
