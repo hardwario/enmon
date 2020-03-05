@@ -1,5 +1,4 @@
 #include "hid.h"
-
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/hid/IOHIDKeys.h>
 #include <IOKit/usb/USBSpec.h>

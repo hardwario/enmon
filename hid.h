@@ -1,8 +1,7 @@
 #ifndef _HID_H
 #define _HID_H
 
-#include <stddef.h>
-
+#include "common.h"
 #include <IOKit/hid/IOHIDManager.h>
 
 typedef IOHIDDeviceRef hid_device_t;

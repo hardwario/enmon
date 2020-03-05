@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "iohidkeys.h": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "bridge.h": "c",
+        "sht20.h": "c"
     }
 }
