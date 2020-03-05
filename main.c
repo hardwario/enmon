@@ -1,6 +1,7 @@
 #include "hid.h"
 #include <errno.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -29,7 +30,7 @@ static void die(const char *format, ...)
 
 static void delay(int milliseconds)
 {
-    while (1)
+    while (true)
     {
         if (usleep(milliseconds * 1000) != 0)
         {
@@ -45,26 +46,22 @@ static void delay(int milliseconds)
 
 static int i2c_reset(hid_device_t device)
 {
-    unsigned char data[] = { 0xa1, 0x20 };
+    uint8_t data[] = { 0xa1, 0x20 };
 
-    if (hid_send_feature_report(device, data, sizeof(data)) != sizeof(data))
+    if (hid_feature_out(device, data, sizeof(data)) != sizeof(data))
         return -1;
 
     return 0;
 }
 
-static int i2c_get_status(hid_device_t device, unsigned char **status)
+static int i2c_get_status(hid_device_t device, uint8_t **status)
 {
-    static unsigned char data[5];
+    static uint8_t data[5];
 
     memset(data, 0, sizeof(data));
     data[0] = 0xc0;
 
-    int res = hid_get_feature_report(device, data, 5);
-
-    printf("res: %d\n", res);
-
-    if (res != sizeof(data))
+    if (hid_feature_in(device, data, 5) != 5)
         return -1;
 
     if (data[0] != 0xc0)
@@ -75,11 +72,11 @@ static int i2c_get_status(hid_device_t device, unsigned char **status)
     return 0;
 }
 
-static int set_led(hid_device_t device, int state)
+static int set_led(hid_device_t device, bool state)
 {
-    unsigned char data[] = { 0xb0, 0x00, 0x00, state == 0 ? 0x00 : 0x80, 0x80 };
+    uint8_t data[] = { 0xb0, 0x00, 0x00, state ? 0x80 : 0x00, 0x80 };
 
-    if (hid_send_feature_report(device, data, sizeof(data)) != sizeof(data))
+    if (hid_feature_out(device, data, sizeof(data)) != sizeof(data))
         return -1;
 
     return 0;
@@ -87,9 +84,9 @@ static int set_led(hid_device_t device, int state)
 
 static int set_system_clock(hid_device_t device)
 {
-    unsigned char data[] = { 0xa1, 0x01, 0x02 };
+    uint8_t data[] = { 0xa1, 0x01, 0x02 };
 
-    if (hid_send_feature_report(device, data, sizeof(data)) != sizeof(data))
+    if (hid_feature_out(device, data, sizeof(data)) != sizeof(data))
         return -1;
 
     return 0;
@@ -97,9 +94,9 @@ static int set_system_clock(hid_device_t device)
 
 static int set_uart_mode(hid_device_t device)
 {
-    unsigned char data[] = { 0xa1, 0x03, 0x00 };
+    uint8_t data[] = { 0xa1, 0x03, 0x00 };
 
-    if (hid_send_feature_report(device, data, sizeof(data)) != sizeof(data))
+    if (hid_feature_out(device, data, sizeof(data)) != sizeof(data))
         return -1;
 
     return 0;
@@ -107,9 +104,9 @@ static int set_uart_mode(hid_device_t device)
 
 static int set_i2c_mode(hid_device_t device)
 {
-    unsigned char data[] = { 0xa1, 0x02, 0x01 };
+    uint8_t data[] = { 0xa1, 0x02, 0x01 };
 
-    if (hid_send_feature_report(device, data, sizeof(data)) != sizeof(data))
+    if (hid_feature_out(device, data, sizeof(data)) != sizeof(data))
         return -1;
 
     return 0;
@@ -117,12 +114,12 @@ static int set_i2c_mode(hid_device_t device)
 
 static int set_i2c_clock_speed(hid_device_t device)
 {
-    unsigned char data[] = { 0xa1, 0x22, 0x64, 0x00 };
+    uint8_t data[] = { 0xa1, 0x22, 0x64, 0x00 };
 
-    if (hid_send_feature_report(device, data, sizeof(data)) != sizeof(data))
+    if (hid_feature_out(device, data, sizeof(data)) != sizeof(data))
         return -1;
 
-    unsigned char *status;
+    uint8_t *status;
 
     if (i2c_get_status(device, &status) != 0)
         return -2;
@@ -133,18 +130,14 @@ static int set_i2c_clock_speed(hid_device_t device)
     return 0;
 }
 
-static int get_chip_version(hid_device_t device, unsigned char **chip_version)
+static int get_chip_version(hid_device_t device, uint8_t **chip_version)
 {
-    static unsigned char data[13];
+    static uint8_t data[13];
 
     memset(data, 0, sizeof(data));
     data[0] = 0xa0;
 
-    int res = hid_get_feature_report(device, data, sizeof(data));
-
-    printf("res: %d\n", res);
-
-    if (res != sizeof(data))
+    if (hid_feature_in(device, data, sizeof(data)) != sizeof(data))
         return -1;
 
     if (data[0] != 0xa0)
@@ -155,20 +148,15 @@ static int get_chip_version(hid_device_t device, unsigned char **chip_version)
     return 0;
 }
 
-static int get_system_status(hid_device_t device, unsigned char **status)
+static int get_system_status(hid_device_t device, uint8_t **status)
 {
-    static unsigned char data[26];
+    static uint8_t data[26];
 
     memset(data, 0, sizeof(data));
     data[0] = 0xa1;
 
-    int res = hid_get_feature_report(device, data, sizeof(data));
-
-    if (res != sizeof(data) - 1)
-    {
-        printf("res: %d\n", res);
+    if (hid_feature_in(device, data, sizeof(data)) != sizeof(data) - 1)
         return -1;
-    }
 
     if (data[0] != 0xa1)
         return -2;
@@ -177,44 +165,96 @@ static int get_system_status(hid_device_t device, unsigned char **status)
 
     return 0;
 }
-#if 0
-static int i2c_write(hid_device_t device, unsigned char address, const unsigned char *buffer, size_t length, int stop)
+
+static int i2c_wait(hid_device_t device, bool accept_bus_busy)
 {
-    unsigned char data[4 + length];
+    while (true)
+    {
+        uint8_t *status;
+
+        if (i2c_get_status(device, &status) != 0)
+            return -1;
+
+        if ((status[1] & 0x01) == 0 && (status[1] & 0x20) != 0)
+        {
+            if ((status[1] & 0x1e) != 0)
+                return -2;
+            if (!accept_bus_busy && (status[1] & 0x40) != 0)
+                return -3;
+            break;
+        }
+
+        delay(100);
+    }
+
+    return 0;
+}
+
+static int i2c_write(hid_device_t device, uint8_t address, const uint8_t *buffer, size_t length, bool stop)
+{
+    delay(10);
+
+    uint8_t data[4 + length];
 
     data[0] = 0xd0 + (length - 1) / 4;
     data[1] = address;
-    data[2] = stop == 0 ? 0x02 : 0x06;
+    data[2] = stop ? 0x06 : 0x02;
     data[3] = length;
 
     memcpy(&data[4], buffer, length);
 
-    delay(100);
-
-    // TODO add I2C wait?
-    if (hid_write(handle, data, 4 + length) != (4 + length))
+    if (hid_interrupt_out(device, data, 4 + length) != 4 + length)
         return -1;
 
-    /*
-    unsigned char *status;
-
-    if (i2c_get_status(handle, &status) != 0)
+    if (i2c_wait(device, stop ? false : true) != 0)
         return -2;
-    */
 
-    // TODO Check status
+    return 0;
+}
+
+static int i2c_read(hid_device_t device, uint8_t address, uint8_t *buffer, size_t length, bool restart)
+{
+    if (!restart)
+        delay(10);
+
+    uint8_t data[64];
+
+    data[0] = 0xc2;
+    data[1] = address;
+    data[2] = restart ? 0x07 : 0x06;
+    data[3] = length;
+    data[4] = length >> 8;
+
+    // TODO ?
+    if (i2c_wait(device, false) != 0)
+        return -3;
+
+    if (hid_interrupt_out(device, data, 5) != 5)
+        return -1;
+
+    if (hid_interrupt_in(device, data, 64) < length + 2)
+        return -2;
+
+    if (i2c_wait(device, false) != 0)
+        return -3;
+
+    if (data[0] != 0xd0)
+        return -4;
+
+    if (data[1] != length)
+        return -5;
+
+    memcpy(buffer, &data[2], length);
 
     return 0;
 }
 
 static int i2c_select(hid_device_t device, int bus)
 {
-    unsigned char data[] = { bus == 0 ? 0x01 : 0x02 };
+    uint8_t data[] = { bus == 0 ? 0x01 : 0x02 };
 
-    return i2c_write(handle, 0x70, data, sizeof(data), 1);
+    return i2c_write(device, 0x70, data, sizeof(data), true);
 }
-
-#endif
 
 int main(int argc, char **argv)
 {
@@ -222,24 +262,6 @@ int main(int argc, char **argv)
 
     if (hid_open(&device, 0x403, 0x6030) != 0)
         die("Call `hid_open` failed");
-
-    /*
-    if (hid_init() != 0)
-        die("Call `hid_init` failed");
-
-    hid_device *handle = hid_open(0x403, 0x6030, NULL);
-
-    if (handle == NULL)
-        die("Call `hid_open` failed");
-    */
-    // TODO Do we really want non-blocking mode?
-    /*
-    if (hid_set_nonblocking(handle, 1) != 0)
-        die("Call `hid_set_nonblocking` failed");
-    */
-
-
-
 
     /*
     if (hid_get_manufacturer_string(handle, wstr, WSTR_MAX) != 0)
@@ -255,30 +277,33 @@ int main(int argc, char **argv)
         die("Product string mismatch");
 
     */
-    unsigned char *chip_version;
+    uint8_t *chip_version;
 
     if (get_chip_version(device, &chip_version) != 0)
         die("Call `chip_version` failed");
 
-    unsigned char *status;
+    uint8_t *status;
 
     if (get_system_status(device, &status) != 0)
         die("Call `get_system_status` failed");
 
-    for (size_t i = 0; i < 25; i++)
-        printf("Status %u: 0x%02x\n", i, status[i]);
+    for (int i = 0; i < 25; i++)
+        printf("Status %d: 0x%02x\n", i, status[i]);
 
-    if (i2c_reset(device) != 0)
-        die("Call `i2c_reset` failed");
-
-    if (set_i2c_mode(device) != 0)
-        die("Call `set_i2c_mode` failed");
+    if (set_system_clock(device) != 0)
+        die("Call `set_system_clock` failed");
 
     if (set_uart_mode(device) != 0)
         die("Call `set_uart_mode` failed");
 
-    if (set_system_clock(device) != 0)
-        die("Call `set_system_clock` failed");
+    if (set_i2c_mode(device) != 0)
+        die("Call `set_i2c_mode` failed");
+
+    if (i2c_reset(device) != 0)
+        die("Call `i2c_reset` failed");
+
+    if (set_i2c_clock_speed(device) != 0)
+        die("Call `i2c_set_speed` failed");
 
     if (set_led(device, 1) != 0)
         die("Call `set_led` failed");
@@ -288,26 +313,39 @@ int main(int argc, char **argv)
     if (set_led(device, 0) != 0)
         die("Call `set_led` failed");
 
-    if (set_i2c_clock_speed(device) != 0)
-        die("Call `i2c_set_speed` failed");
-
-    /*
-    */
-
-    /*
-    if (i2c_select(handle, 0) != 0)
+    if (i2c_select(device, 0) != 0)
         die("Call `i2c_select` failed");
-        */
 
-    //if (i2c_get_status(handle, &status) != 0)
-      //  die("Call `i2c_get_status` failed");
+    // ---------------
 
-    //hid_close(handle);
+    uint8_t buffer[16];
 
-    /*
-    if (hid_exit() != 0)
-        die("Call `hid_exit` failed");
-    */
+    buffer[0] = 0xfe;
+
+    if (i2c_write(device, 0x40, buffer, 1, true) != 0)
+        die("Call `i2c_write` failed");
+
+    delay(100);
+
+    buffer[0] = 0xf5;
+    if (i2c_write(device, 0x40, buffer, 1, true) != 0)
+        die("Call `i2c_write` failed");
+
+    delay(100);
+
+    int res = i2c_read(device, 0x40, buffer, 2, false);
+    if (res != 0)
+        die("Call `i2c_read` failed (%d)", res);
+
+    int16_t value = buffer[0] << 8 | buffer[1];
+
+    float humidity = -6 + 125 * value / 65536.f;
+    printf("Humidity: %.1f %%\n", humidity);
+
+    // ---------------
+
+    if (hid_close(device) != 0)
+        die("Call `hid_close` failed");
 
     exit(EXIT_SUCCESS);
 }

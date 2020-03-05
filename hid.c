@@ -4,10 +4,16 @@
 #include <IOKit/hid/IOHIDKeys.h>
 #include <IOKit/usb/USBSpec.h>
 
+static uint8_t m_hid_buffer[64];
+static size_t m_hid_length;
+
+static void hid_report_callback(void *context, IOReturn result, void *sender, IOHIDReportType type, uint32_t reportID, uint8_t *report, CFIndex length)
+{
+    m_hid_length = length;
+}
+
 int hid_open(hid_device_t *device, int vendor_id, int product_id)
 {
-    #if 1
-
     CFMutableDictionaryRef matching = CFDictionaryCreateMutable(kCFAllocatorDefault, kIOHIDOptionsTypeNone, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
     if (matching == NULL)
@@ -54,56 +60,68 @@ int hid_open(hid_device_t *device, int vendor_id, int product_id)
         if (!*device)
             continue;
 
-        CFTypeRef ref_ifn = IOHIDDeviceGetProperty(*device, CFSTR(kUSBInterfaceNumber));
-
         SInt32 value;
-        CFNumberGetValue(ref_ifn, kCFNumberSInt32Type, &value);
+
+        CFTypeRef interface = IOHIDDeviceGetProperty(*device, CFSTR(kUSBInterfaceNumber));
+        CFNumberGetValue(interface, kCFNumberSInt32Type, &value);
+        CFRelease(interface);
 
         if (value != 0)
             continue;
 
         if (IOHIDDeviceOpen(*device, kIOHIDOptionsTypeSeizeDevice) == kIOReturnSuccess)
+        {
+            IOHIDDeviceRegisterInputReportCallback(*device, m_hid_buffer, sizeof(m_hid_buffer), hid_report_callback, NULL);
+            IOHIDDeviceScheduleWithRunLoop(*device, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+
             break;
+        }
     }
 
     free(array);
 
     return index == count ? -5 : 0;
-
-    #else
-
-	io_registry_entry_t entry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/AppleACPIPlatformExpert/PCI0@0/AppleACPIPCI/XHC1@14/XHC1@14000000/HS10@14600000/FT260@14600000/IOUSBHostInterface@0/AppleUserUSBHostHIDDevice");
-
-	if (entry == MACH_PORT_NULL)
-        return -3;
-
-	*device = IOHIDDeviceCreate(kCFAllocatorDefault, entry);
-
-	if (*device == NULL)
-        return -4;
-
-	if (IOHIDDeviceOpen(*device, kIOHIDOptionsTypeSeizeDevice) != kIOReturnSuccess)
-        return -5;
-
-    return 0;
-
-    #endif
 }
 
-int hid_send_feature_report(hid_device_t device, const void *data, size_t length)
+int hid_close(hid_device_t device)
 {
-	if (IOHIDDeviceSetReport(device, kIOHIDReportTypeFeature, *(uint8_t *) data, (const uint8_t *) data, length) != kIOReturnSuccess)
+    if (IOHIDDeviceClose(device, kIOHIDOptionsTypeNone) != kIOReturnSuccess)
+        return -1;
+
+    return 0;
+}
+
+ssize_t hid_feature_out(hid_device_t device, const void *buffer, size_t length)
+{
+	if (IOHIDDeviceSetReport(device, kIOHIDReportTypeFeature, *(uint8_t *) buffer, (const uint8_t *) buffer, length) != kIOReturnSuccess)
 		return -1;
 
 	return length;
 }
 
-int hid_get_feature_report(hid_device_t device, void *data, size_t length)
+ssize_t hid_feature_in(hid_device_t device, void *buffer, size_t length)
 {
-    CFIndex l = length;
-
-	if (IOHIDDeviceGetReport(device, kIOHIDReportTypeFeature, *(uint8_t *) data, (uint8_t *) data, &l) != kIOReturnSuccess)
+	if (IOHIDDeviceGetReport(device, kIOHIDReportTypeFeature, *(uint8_t *) buffer, (uint8_t *) buffer, (CFIndex *) &length) != kIOReturnSuccess)
 		return -1;
 
-	return l;
+	return length;
+}
+
+ssize_t hid_interrupt_out(hid_device_t device, const void *buffer, size_t length)
+{
+	if (IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, *(uint8_t *) buffer, (const uint8_t *) buffer, length) != kIOReturnSuccess)
+		return -1;
+
+	return length;
+}
+
+ssize_t hid_interrupt_in(hid_device_t device, void *buffer, size_t length)
+{
+    if (CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1.0, true) != kCFRunLoopRunHandledSource)
+        return -1;
+
+    length = length < m_hid_length ? length : m_hid_length;
+    memcpy(buffer, m_hid_buffer, length);
+
+    return length;
 }
