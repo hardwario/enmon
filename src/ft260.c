@@ -161,7 +161,7 @@ static int _ft260_i2c_wait(ft260_t *ctx, bool accept_bus_busy)
             break;
         }
 
-        delay(100);
+        delay(10);
     }
 
     return 0;
