@@ -43,6 +43,8 @@ bridge_t *bridge_new(void)
     if (ctx->ft260 == NULL)
         goto except;
 
+    ctx->bus = -1;
+
     if (_bridge_initialize(ctx) != 0)
         goto except;
 
@@ -81,10 +83,15 @@ ft260_t *bridge_get_ft260(bridge_t *ctx)
 
 int bridge_i2c_select(bridge_t *ctx, int bus)
 {
+    if (ctx->bus == bus)
+        return 0;
+
     uint8_t data[] = { bus == 0 ? 0x01 : 0x02 };
 
     if (ft260_i2c_write_request(ctx->ft260, 0x70, data, sizeof(data), true) != 0)
         return -1;
+
+    ctx->bus = bus;
 
     return 0;
 }

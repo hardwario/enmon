@@ -6,6 +6,7 @@
 struct bridge
 {
     ft260_t *ft260;
+    int bus;
 };
 
 typedef struct bridge bridge_t;
