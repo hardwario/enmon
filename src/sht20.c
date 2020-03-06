@@ -65,9 +65,8 @@ int sht20_measure(sht20_t *ctx, float *temperature, float *humidity)
         return -3;
     }
 
-    // TODO uint16_t?
-    int16_t t = buffer[0] << 8 | buffer[1];
-    *temperature = -46.85f + 175.72f * t / 65536.f;
+    uint16_t t = buffer[0] << 8 | buffer[1];
+    *temperature = -46.85f + 175.72f * (float) t / 65536.f;
 
     buffer[0] = 0xf5;
 
@@ -88,7 +87,7 @@ int sht20_measure(sht20_t *ctx, float *temperature, float *humidity)
     }
 
     uint16_t rh = buffer[0] << 8 | buffer[1];
-    *humidity = -6.f + 125.f * rh / 65536.f;
+    *humidity = -6.f + 125.f * (float) rh / 65536.f;
 
     return 0;
 }
