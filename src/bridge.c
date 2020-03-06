@@ -6,27 +6,27 @@ static int _bridge_initialize(bridge_t *ctx)
     uint8_t *chip_version;
 
     if (ft260_get_chip_version(ctx->ft260, &chip_version) != 0)
-        die("Call `ft260_get_chip_version` failed");
+        return -1;
 
     uint8_t *system_status;
 
     if (ft260_get_system_status(ctx->ft260, &system_status) != 0)
-        die("Call `ft260_get_system_status` failed");
+        return -2;
 
     if (ft260_set_system_clock(ctx->ft260) != 0)
-        die("Call `ft260_set_system_clock` failed");
+        return -3;
 
     if (ft260_set_i2c_mode(ctx->ft260) != 0)
-        die("Call `ft260_set_i2c_mode` failed");
+        return -4;
 
     if (ft260_set_uart_mode(ctx->ft260) != 0)
-        die("Call `ft260_set_uart_mode` failed");
+        return -5;
 
     if (ft260_i2c_reset(ctx->ft260) != 0)
-        die("Call `ft260_i2c_reset` failed");
+        return -6;
 
     if (ft260_set_i2c_clock_speed(ctx->ft260) != 0)
-        die("Call `ft260_set_i2c_clock_speed` failed");
+        return -7;
 
     return 0;
 }

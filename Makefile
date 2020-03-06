@@ -1,32 +1,39 @@
 TARGET = enmon
 CC = gcc
-CFLAGS = -Wall -pedantic -std=gnu11 -O2
-LIBS = -framework IOKit -framework CoreFoundation
+
+CFLAGS += -std=gnu11
+CFLAGS += -Wall
+CFLAGS += -pedantic
+CFLAGS += -O2
+
+LDFLAGS += -framework CoreFoundation
+LDFLAGS += -framework IOKit
+
+INC_DIR +=
+SRC_DIR += src
+OBJ_DIR ?= obj
+OUT_DIR ?= out
+
+SRC = $(foreach dir,$(SRC_DIR),$(wildcard $(dir)/*.c))
+OBJ = $(SRC:%.c=$(OBJ_DIR)/%.o)
+DEP = $(OBJ:%.o=%.d)
+BIN = $(OUT_DIR)/$(TARGET)
 
 .PHONY: all clean
 
-all: $(TARGET)
+all: $(BIN)
 
 clean:
-	-rm -f $(TARGET) bridge.o ft260.o hid.o main.o sht20.o util.o
+	@-rm -rf $(OBJ_DIR) $(OUT_DIR)
 
-bridge.o: bridge.c
-	$(CC) $(CFLAGS) -c $< -o $@
+$(BIN): $(OBJ)
+	@echo "Linking..."
+	@mkdir -p $(@D)
+	@$(CC) $(LDFLAGS) $(OBJ) -o $@
 
-ft260.o: ft260.c
-	$(CC) $(CFLAGS) -c $< -o $@
+$(OBJ_DIR)/%.o: %.c Makefile
+	@echo "Compiling: $<"
+	@mkdir -p $(@D)
+	@$(CC) $(CFLAGS) -MMD -c $(foreach d,$(INC_DIR),-I$d) -o $@ $<
 
-hid.o: hid.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-main.o: main.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-sht20.o: sht20.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-util.o: util.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(TARGET): bridge.o ft260.o hid.o main.o sht20.o util.o
-	$(CC) bridge.o ft260.o hid.o main.o sht20.o util.o $(LIBS) -o $@
+-include $(DEP)
