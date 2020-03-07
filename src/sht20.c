@@ -36,15 +36,11 @@ int sht20_measure(sht20_t *ctx, float *temperature, float *humidity)
         buffer[0] = 0xfe;
 
         if (ft260_i2c_write_request(ft260, ctx->address, buffer, 1, true) != 0)
-        {
-            ctx->initialized = false;
-
             return -1;
-        }
-
-        delay(100);
 
         ctx->initialized = true;
+
+        delay(100);
     }
 
     buffer[0] = 0xf3;
