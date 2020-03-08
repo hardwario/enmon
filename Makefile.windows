@@ -8,10 +8,12 @@ LD = link.exe
 #  /FC /errorReport:queue src\bridge.c src\ft260.c src\main.c src\sht20.c src\util.c src\windows\hid.c
 
 CFLAGS += /W3
+CFLAGS += /nologo
+
 #LDFLAGS += -mwindows
-LDFLAGS += setupapi.lib hid.lib
-#LDFLAGS += -lhid
-#LDFLAGS += -lgdi32  -lcomctl32 -lnewdev -lwinmm -static
+LDFLAGS += /nologo
+LDFLAGS += setupapi.lib
+LDFLAGS += hid.lib
 
 INC_DIR += src
 SRC_DIR += src
@@ -21,7 +23,6 @@ OUT_DIR ?= out
 
 SRC = $(foreach dir,$(SRC_DIR),$(wildcard $(dir)/*.c))
 OBJ = $(SRC:%.c=$(OBJ_DIR)/%.obj)
-DEP = $(OBJ:%.o=%.d)
 BIN = $(OUT_DIR)/$(TARGET)
 
 .PHONY: all clean
@@ -32,11 +33,11 @@ clean:
 	@rmdir /s /q $(OBJ_DIR) $(OUT_DIR)
 
 $(BIN): $(OBJ)
-	@echo "Linking..."
+	@echo Linking...
 	@if not exist "$(@D)" mkdir "$(@D)"
-	$(LD) $(LDFLAGS) $(OBJ) /OUT:$@
+	@$(LD) $(LDFLAGS) $(OBJ) /OUT:$@
 
 $(OBJ_DIR)/%.obj: %.c Makefile.windows
-	@echo "Compiling: $<"
+	@echo Compiling: $<
 	@if not exist "$(@D)" mkdir "$(@D)"
-	$(CC) $(CFLAGS) /c $(foreach d,$(INC_DIR),/I $d) /Fo$@ $<
+	@$(CC) $(CFLAGS) /c $(foreach d,$(INC_DIR),/I $d) /Fo$@ $<
