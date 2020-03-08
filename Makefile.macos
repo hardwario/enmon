@@ -9,8 +9,9 @@ CFLAGS += -O2
 LDFLAGS += -framework CoreFoundation
 LDFLAGS += -framework IOKit
 
-INC_DIR +=
+INC_DIR += src
 SRC_DIR += src
+SRC_DIR += src/macos
 OBJ_DIR ?= obj
 OUT_DIR ?= out
 
