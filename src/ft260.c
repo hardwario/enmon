@@ -171,20 +171,33 @@ int ft260_i2c_write_request(ft260_t *ctx, uint8_t address, const uint8_t *buffer
 {
     delay(10);
 
-    uint8_t data[4 + length];
+    uint8_t *data = malloc(4 + length);
 
-    data[0] = 0xd0 + (length - 1) / 4;
+    if (data == NULL)
+        return -1;
+
+    data[0] = 0xd0 + ((uint8_t) length - 1) / 4;
     data[1] = address;
     data[2] = stop ? 0x06 : 0x02;
-    data[3] = length;
+    data[3] = (uint8_t) length;
 
     memcpy(&data[4], buffer, length);
 
     if (hid_interrupt_out(ctx->device, data, 4 + length) != 4 + length)
-        return -1;
+    {
+        free(data);
+
+        return -2;
+    }
 
     if (_ft260_i2c_wait(ctx, stop ? false : true) != 0)
-        return -2;
+    {
+        free(data);
+
+        return -3;
+    }
+
+    free(data);
 
     return 0;
 }
@@ -199,8 +212,8 @@ int ft260_i2c_read_request(ft260_t *ctx, uint8_t address, uint8_t *buffer, size_
     data[0] = 0xc2;
     data[1] = address;
     data[2] = restart ? 0x07 : 0x06;
-    data[3] = length;
-    data[4] = length >> 8;
+    data[3] = (uint8_t) length;
+    data[4] = (uint8_t) (length >> 8);
 
     if (hid_interrupt_out(ctx->device, data, 5) != 5)
         return -1;

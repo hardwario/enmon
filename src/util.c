@@ -1,4 +1,7 @@
 #include "util.h"
+#if defined(_MSC_VER)
+#include <windows.h>
+#endif
 
 void die(const char *format, ...)
 {
@@ -13,6 +16,36 @@ void die(const char *format, ...)
 
     exit(EXIT_FAILURE);
 }
+
+#if defined(_MSC_VER)
+static int usleep(int64_t usec)
+{
+    LARGE_INTEGER ft;
+    ft.QuadPart = -10 * usec;
+
+    HANDLE timer = CreateWaitableTimer(NULL, TRUE, NULL);
+
+    if (timer == NULL)
+        return -1;
+
+    if (SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0) == FALSE)
+    {
+        CloseHandle(timer);
+        return -2;
+    }
+
+    if (WaitForSingleObject(timer, INFINITE) != WAIT_TIMEOUT)
+    {
+        CloseHandle(timer);
+        return -3;
+    }
+
+    if (CloseHandle(timer) != TRUE)
+        return -4;
+
+    return 0;
+}
+#endif
 
 void delay(int milliseconds)
 {
