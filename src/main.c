@@ -18,8 +18,8 @@ int main(int argc, char **argv)
     if (sht20_measure(sht20, &temperature, &humidity) != 0)
         die("Call `sht20_measure` failed");
 
-    printf("Temperature: %.1f\n", temperature);
-    printf("Humidity: %.1f\n", humidity);
+    printf("@SENSOR: \"Temperature\",%.1f\n", temperature);
+    printf("@SENSOR: \"Humidity\",%.1f\n", humidity);
 
     if (sht20_free(sht20) != 0)
         die("Call `sht20_free` failed");

@@ -34,7 +34,7 @@ static int usleep(int64_t usec)
         return -2;
     }
 
-    if (WaitForSingleObject(timer, INFINITE) != WAIT_TIMEOUT)
+    if (WaitForSingleObject(timer, INFINITE) != WAIT_OBJECT_0)
     {
         CloseHandle(timer);
         return -3;

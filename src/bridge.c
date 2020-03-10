@@ -98,7 +98,15 @@ int bridge_i2c_select(bridge_t *ctx, int bus)
 
 int bridge_set_led(bridge_t *ctx, bool state)
 {
-    uint8_t data[] = { 0xb0, 0x00, 0x00, state ? 0x80 : 0x00, 0x80 };
+    uint8_t data[64];
+
+    memset(data, 0, sizeof(data));
+
+    data[0] = 0xb0;
+    data[1] = 0x00;
+    data[2] = 0x00;
+    data[3] = state ? 0x80 : 0x00;
+    data[4] = 0x80;
 
     hid_device_t device = ft260_get_device(ctx->ft260);
 

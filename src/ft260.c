@@ -234,7 +234,7 @@ int ft260_i2c_read_request(ft260_t *ctx, uint8_t address, uint8_t *buffer, size_
     if (hid_interrupt_out(ctx->device, data, sizeof(data)) != sizeof(data))
         return -1;
 
-    if (hid_interrupt_in(ctx->device, data, sizeof(data)) < length + 2)
+    if (hid_interrupt_in(ctx->device, data, sizeof(data)) < (ssize_t) length + 2)
         return -2;
 
     if (_ft260_i2c_wait(ctx, false) != 0)

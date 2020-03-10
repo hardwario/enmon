@@ -1,7 +1,9 @@
 #include "hid.h"
 #include <hidsdi.h>
+#include <hidclass.h>
 #include <setupapi.h>
 #include <windows.h>
+#include <winioctl.h>
 
 int hid_open(hid_device_t *device, int vendor_id, int product_id)
 {
@@ -47,7 +49,7 @@ int hid_open(hid_device_t *device, int vendor_id, int product_id)
             continue;
         }
 
-        HANDLE handle = CreateFileA(device_interface_detail_data->DevicePath, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
+        HANDLE handle = CreateFileA(device_interface_detail_data->DevicePath, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
 
         if (handle == INVALID_HANDLE_VALUE)
         {
@@ -87,16 +89,13 @@ int hid_open(hid_device_t *device, int vendor_id, int product_id)
 
     if (found)
     {
-        printf("Found Path: %s\n", device_interface_detail_data->DevicePath);
-
-        *device = CreateFileA(device_interface_detail_data->DevicePath, GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
+        *device = CreateFileA(device_interface_detail_data->DevicePath, GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
 
         free(device_interface_detail_data);
 
         if (*device == INVALID_HANDLE_VALUE)
         {
             SetupDiDestroyDeviceInfoList(device_info_set);
-
             return -2;
         }
     }
@@ -117,20 +116,65 @@ int hid_close(hid_device_t device)
 
 ssize_t hid_feature_out(hid_device_t device, const void *buffer, size_t length)
 {
+	if (HidD_SetFeature(device, (PVOID) buffer, length) != TRUE)
+        return -1;
+
 	return length;
 }
 
 ssize_t hid_feature_in(hid_device_t device, void *buffer, size_t length)
 {
-	return length;
+	OVERLAPPED ol;
+	memset(&ol, 0, sizeof(ol));
+
+	DWORD bytes_transferred;
+
+	if (DeviceIoControl(device, IOCTL_HID_GET_FEATURE, buffer, length, buffer, length, &bytes_transferred, &ol) != TRUE)
+    {
+		if (GetLastError() != ERROR_IO_PENDING)
+            return -1;
+	}
+
+	if (GetOverlappedResult(device, &ol, &bytes_transferred, TRUE) != TRUE)
+		return -2;
+
+	return bytes_transferred;
 }
 
 ssize_t hid_interrupt_out(hid_device_t device, const void *buffer, size_t length)
 {
-	return length;
+    OVERLAPPED ol;
+    memset(&ol, 0, sizeof(ol));
+
+    if (WriteFile(device, buffer, length, NULL, &ol) != TRUE)
+    {
+		if (GetLastError() != ERROR_IO_PENDING)
+            return -1;
+    }
+
+    DWORD bytes_transferred;
+
+    if (GetOverlappedResult(device, &ol, &bytes_transferred, TRUE) != TRUE)
+        return -2;
+
+	return (ssize_t) bytes_transferred;
 }
 
 ssize_t hid_interrupt_in(hid_device_t device, void *buffer, size_t length)
 {
-    return length;
+    OVERLAPPED ol;
+    memset(&ol, 0, sizeof(ol));
+
+    DWORD bytes_read;
+
+    if (ReadFile(device, buffer, length, &bytes_read, &ol) != TRUE)
+    {
+        if (GetLastError() != ERROR_IO_PENDING)
+            return -1;
+    }
+
+    if (GetOverlappedResult(device, &ol, &bytes_read, TRUE) != TRUE)
+        return -2;
+
+    return (ssize_t) bytes_read;
 }
