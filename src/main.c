@@ -28,6 +28,10 @@ int main(int argc, char **argv)
     else
         printf("@SENSOR: \"Humidity\",%.1f\n", humidity);
 
+    printf("@SENSOR: \"Illuminance\",NULL\n");
+    printf("@SENSOR: \"Pressure\",NULL\n");
+    printf("@SENSOR: \"Altitude\",NULL\n");
+
     if (sht20_free(sht20) != 0)
         die("Call `sht20_free` failed");
 
