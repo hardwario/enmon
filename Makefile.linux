@@ -6,12 +6,11 @@ CFLAGS += -Wall
 CFLAGS += -pedantic
 CFLAGS += -O2
 
-LDFLAGS += -framework CoreFoundation
-LDFLAGS += -framework IOKit
+LDFLAGS +=
 
 INC_DIR += src
 SRC_DIR += src
-SRC_DIR += src/macos
+SRC_DIR += src/linux
 OBJ_DIR ?= obj
 OUT_DIR ?= out
 
@@ -32,7 +31,7 @@ $(BIN): $(OBJ)
 	@mkdir -p $(@D)
 	@$(CC) $(LDFLAGS) $(OBJ) -o $@
 
-$(OBJ_DIR)/%.o: %.c Makefile Makefile.macos
+$(OBJ_DIR)/%.o: %.c Makefile Makefile.linux
 	@echo "Compiling: $<"
 	@mkdir -p $(@D)
 	@$(CC) $(CFLAGS) -MMD -c $(foreach d,$(INC_DIR),-I$d) -o $@ $<

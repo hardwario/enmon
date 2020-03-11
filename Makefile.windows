@@ -2,15 +2,12 @@ TARGET = enmon.exe
 CC = cl.exe
 LD = link.exe
 
-#  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.24.28314\bin\HostX86\x64\CL.exe /c /ZI
-#   /JMC /nologo /W3 /WX- /diagnostics:column /sdl /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /RTC1 /MD
-#  d /GS /fp:precise /permissive- /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc142.pdb" /Gd /TC
-#  /FC /errorReport:queue src\bridge.c src\ft260.c src\main.c src\sht20.c src\util.c src\windows\hid.c
-
 CFLAGS += /W3
 CFLAGS += /nologo
+CFLAGS += /O1
+CFLAGS += /Os
+CFLAGS += /Gy
 
-#LDFLAGS += -mwindows
 LDFLAGS += /nologo
 LDFLAGS += setupapi.lib
 LDFLAGS += hid.lib
@@ -30,14 +27,15 @@ BIN = $(OUT_DIR)/$(TARGET)
 all: $(BIN)
 
 clean:
-	@rmdir /s /q $(OBJ_DIR) $(OUT_DIR)
+	@if exist "$(OBJ_DIR)" rmdir /s /q "$(OBJ_DIR)"
+	@if exist "$(OUT_DIR)" rmdir /s /q "$(OUT_DIR)"
 
 $(BIN): $(OBJ)
 	@echo Linking...
 	@if not exist "$(@D)" mkdir "$(@D)"
 	@$(LD) $(LDFLAGS) $(OBJ) /OUT:$@
 
-$(OBJ_DIR)/%.obj: %.c Makefile.windows
+$(OBJ_DIR)/%.obj: %.c Makefile Makefile.windows
 	@echo Compiling: $<
 	@if not exist "$(@D)" mkdir "$(@D)"
 	@$(CC) $(CFLAGS) /c $(foreach d,$(INC_DIR),/I $d) /Fo$@ $<

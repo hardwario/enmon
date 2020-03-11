@@ -16,10 +16,17 @@ int main(int argc, char **argv)
     float humidity;
 
     if (sht20_measure(sht20, &temperature, &humidity) != 0)
-        die("Call `sht20_measure` failed");
+        temperature = humidity = NAN;
 
-    printf("@SENSOR: \"Temperature\",%.1f\n", temperature);
-    printf("@SENSOR: \"Humidity\",%.1f\n", humidity);
+    if (isnan(temperature))
+        printf("@SENSOR: \"Temperature\",NULL\n");
+    else
+        printf("@SENSOR: \"Temperature\",%.1f\n", temperature);
+
+    if (isnan(humidity))
+        printf("@SENSOR: \"Humidity\",NULL\n");
+    else
+        printf("@SENSOR: \"Humidity\",%.1f\n", humidity);
 
     if (sht20_free(sht20) != 0)
         die("Call `sht20_free` failed");
