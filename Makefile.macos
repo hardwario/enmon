@@ -6,6 +6,7 @@ CFLAGS += -Wall
 CFLAGS += -pedantic
 CFLAGS += -O2
 
+LDFLAGS += -lm
 LDFLAGS += -framework CoreFoundation
 LDFLAGS += -framework IOKit
 
