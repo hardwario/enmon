@@ -81,6 +81,16 @@ ft260_t *bridge_get_ft260(bridge_t *ctx)
     return ctx->ft260;
 }
 
+int bridge_ping(bridge_t *ctx)
+{
+    uint8_t *chip_version;
+
+    if (ft260_get_chip_version(ctx->ft260, &chip_version) != 0)
+        return -1;
+
+    return 0;
+}
+
 int bridge_i2c_select(bridge_t *ctx, int bus)
 {
     if (ctx->bus == bus)

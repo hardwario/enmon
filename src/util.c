@@ -3,6 +3,30 @@
 #include <windows.h>
 #endif
 
+void say(const char *format, ...)
+{
+    va_list va;
+
+    va_start(va, format);
+    vfprintf(stdout, format, va);
+    va_end(va);
+
+    fprintf(stdout, "\n");
+    fflush(stdout);
+}
+
+void cry(const char *format, ...)
+{
+    va_list va;
+
+    va_start(va, format);
+    vfprintf(stderr, format, va);
+    va_end(va);
+
+    fprintf(stderr, "\n");
+    fflush(stderr);
+}
+
 void die(const char *format, ...)
 {
     va_list va;
@@ -49,6 +73,9 @@ static int usleep(int64_t usec)
 
 void delay(int milliseconds)
 {
+    if (milliseconds == 0)
+        return;
+
     while (true)
     {
         if (usleep(milliseconds * 1000) != 0)

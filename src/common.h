@@ -17,4 +17,12 @@ typedef SSIZE_T ssize_t;
 #include <unistd.h>
 #endif
 
+#ifndef PROGRAM
+#define PROGRAM "enmon"
+#endif
+
+#ifndef VERSION
+#define VERSION __DATE__ " " __TIME__
+#endif
+
 #endif
