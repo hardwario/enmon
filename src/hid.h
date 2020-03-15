@@ -4,17 +4,13 @@
 #include "common.h"
 
 #if defined(_MSC_VER)
-
 #include <windows.h>
-
 typedef HANDLE hid_device_t;
-
-#else
-
+#elif defined(__APPLE__)
 #include <IOKit/hid/IOHIDManager.h>
-
 typedef IOHIDDeviceRef hid_device_t;
-
+#else
+typedef int hid_device_t;
 #endif
 
 int hid_open(hid_device_t *device, int vendor_id, int product_id);
