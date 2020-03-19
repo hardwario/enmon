@@ -31,17 +31,25 @@ hid_device_t ft260_get_device(ft260_t *ctx)
 
 int ft260_get_chip_version(ft260_t *ctx, uint8_t **chip_version)
 {
-    uint8_t data[64];
+    uint8_t *data = calloc(1, 64);
 
-    memset(data, 0, sizeof(data));
+    if (data == NULL)
+        return -1;
+
 
     data[0] = 0xa0;
 
-    if (hid_feature_in(ctx->device, data, sizeof(data)) != 13)
-        return -1;
+    if (hid_feature_in(ctx->device, data, 64) != 13)
+    {
+        free(data);
+        return -2;
+    }
 
     if (data[0] != 0xa0)
-        return -2;
+    {
+        free(data);
+        return -3;
+    }
 
     *chip_version = data;
 
@@ -50,17 +58,24 @@ int ft260_get_chip_version(ft260_t *ctx, uint8_t **chip_version)
 
 int ft260_get_system_status(ft260_t *ctx, uint8_t **system_status)
 {
-    uint8_t data[64];
+    uint8_t *data = calloc(1, 64);
 
-    memset(data, 0, sizeof(data));
+    if (data == NULL)
+        return -1;
 
     data[0] = 0xa1;
 
-    if (hid_feature_in(ctx->device, data, sizeof(data)) != 25)
-        return -1;
+    if (hid_feature_in(ctx->device, data, 64) != 25)
+    {
+        free(data);
+        return -2;
+    }
 
     if (data[0] != 0xa1)
-        return -2;
+    {
+        free(data);
+        return -3;
+    }
 
     *system_status = data;
 
@@ -149,17 +164,24 @@ int ft260_set_i2c_clock_speed(ft260_t *ctx)
 
 int ft260_get_i2c_status(ft260_t *ctx, uint8_t **status)
 {
-    uint8_t data[64];
+    uint8_t *data = calloc(1, 64);
 
-    memset(data, 0, sizeof(data));
+    if (data == NULL)
+        return -1;
 
     data[0] = 0xc0;
 
-    if (hid_feature_in(ctx->device, data, sizeof(data)) != 5)
+    if (hid_feature_in(ctx->device, data, 64) != 5)
+    {
+        free(data);
         return -1;
+    }
 
     if (data[0] != 0xc0)
+    {
+        free(data);
         return -2;
+    }
 
     *status = data;
 
@@ -175,17 +197,36 @@ static int _ft260_i2c_wait(ft260_t *ctx, bool accept_bus_busy)
         if (ft260_get_i2c_status(ctx, &status) != 0)
             return -1;
 
-        if ((status[1] & 0x01) == 0 && (status[1] & 0x20) != 0)
+        if ((status[1] & 0x01) == 0)
         {
             if ((status[1] & 0x1e) != 0)
+            {
+                free(status);
                 return -2;
+            }
 
-            if (!accept_bus_busy && (status[1] & 0x40) != 0)
-                return -3;
+            if (accept_bus_busy)
+            {
+                if ((status[1] & 0x40) == 0)
+                {
+                    free(status);
+                    return -3;
+                }
+            }
+            else
+            {
+                if ((status[1] & 0x20) == 0)
+                {
+                    free(status);
+                    return -4;
+                }
+            }
 
+            free(status);
             break;
         }
 
+        free(status);
         delay(10);
     }
 

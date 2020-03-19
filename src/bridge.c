@@ -8,10 +8,14 @@ static int _bridge_initialize(bridge_t *ctx)
     if (ft260_get_chip_version(ctx->ft260, &chip_version) != 0)
         return -1;
 
+    free(chip_version);
+
     uint8_t *system_status;
 
     if (ft260_get_system_status(ctx->ft260, &system_status) != 0)
         return -2;
+
+    free(system_status);
 
     if (ft260_set_system_clock(ctx->ft260) != 0)
         return -3;
@@ -87,6 +91,8 @@ int bridge_ping(bridge_t *ctx)
 
     if (ft260_get_chip_version(ctx->ft260, &chip_version) != 0)
         return -1;
+
+    free(chip_version);
 
     return 0;
 }
