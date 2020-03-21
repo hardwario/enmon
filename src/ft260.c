@@ -281,7 +281,7 @@ int ft260_i2c_read_request(ft260_t *ctx, uint8_t address, uint8_t *buffer, size_
     if (_ft260_i2c_wait(ctx, false) != 0)
         return -3;
 
-    if (data[0] != 0xd0)
+    if (data[0] != 0xd0 + ((uint8_t) length - 1) / 4)
         return -4;
 
     if (data[1] != length)

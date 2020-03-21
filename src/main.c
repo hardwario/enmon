@@ -1,6 +1,7 @@
 #include "main.h"
 #include "bridge.h"
 #include "cli.h"
+#include "mpl3115a2.h"
 #include "opt3001.h"
 #include "sht20.h"
 #include "util.h"
@@ -16,13 +17,27 @@ int main(int argc, char **argv)
         die("Call `bridge_new` failed");
 
     sht20_t *sht20 = sht20_new(bridge, 0, 0x40);
+
+    if (sht20 == NULL)
+        die("Call `sht20_new` failed");
+
     opt3001_t *opt3001 = opt3001_new(bridge, 0, 0x44);
+
+    if (opt3001 == NULL)
+        die("Call `opt3001_new` failed");
+
+    mpl3115a2_t *mpl3115a2 = mpl3115a2_new(bridge, 0, 0x60);
+
+    if (mpl3115a2 == NULL)
+        die("Call `mpl3115a2_new` failed");
 
     while (true)
     {
         float temperature = NAN;
         float humidity = NAN;
         float illuminance = NAN;
+        float pressure = NAN;
+        float altitude = NAN;
 
         if (bridge_ping(bridge) != 0)
             break;
@@ -46,8 +61,17 @@ int main(int argc, char **argv)
         else
             say("@SENSOR: \"Illuminance\",%.0f", illuminance);
 
-        say("@SENSOR: \"Pressure\",NULL");
-        say("@SENSOR: \"Altitude\",NULL");
+        mpl3115a2_measure(mpl3115a2, &pressure, &altitude);
+
+        if (isnan(pressure))
+            say("@SENSOR: \"Pressure\",NULL");
+        else
+            say("@SENSOR: \"Pressure\",%.0f", pressure);
+
+        if (isnan(altitude))
+            say("@SENSOR: \"Altitude\",NULL");
+        else
+            say("@SENSOR: \"Altitude\",%.1f", altitude);
 
         if (!cli.loop)
             break;
@@ -55,11 +79,14 @@ int main(int argc, char **argv)
             delay(cli.delay * 1000);
     }
 
+    if (sht20_free(sht20) != 0)
+        die("Call `sht20_free` failed");
+
     if (opt3001_free(opt3001) != 0)
         die("Call `opt3001_free` failed");
 
-    if (sht20_free(sht20) != 0)
-        die("Call `sht20_free` failed");
+    if (mpl3115a2_free(mpl3115a2) != 0)
+        die("Call `mpl3115a2_free` failed");
 
     if (bridge_free(bridge) != 0)
         die("Call `bridge_free` failed");
