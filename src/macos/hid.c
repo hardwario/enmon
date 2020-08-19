@@ -8,6 +8,13 @@ static size_t m_hid_length;
 
 static void hid_report_callback(void *context, IOReturn result, void *sender, IOHIDReportType type, uint32_t reportID, uint8_t *report, CFIndex length)
 {
+    (void) context;
+    (void) result;
+    (void) sender;
+    (void) type;
+    (void) reportID;
+    (void) report;
+
     m_hid_length = length;
 }
 
@@ -116,6 +123,8 @@ ssize_t hid_interrupt_out(hid_device_t device, const void *buffer, size_t length
 
 ssize_t hid_interrupt_in(hid_device_t device, void *buffer, size_t length)
 {
+    (void) device;
+
     if (CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1.0, true) != kCFRunLoopRunHandledSource)
         return -1;
 

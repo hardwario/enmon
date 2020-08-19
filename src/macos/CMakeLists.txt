@@ -1,0 +1,5 @@
+set(CMAKE_FIND_FRAMEWORK ONLY)
+find_library(LIB_COREFOUNDATION CoreFoundation)
+find_library(LIB_IOKIT IoKit)
+target_link_libraries(enmon ${LIB_COREFOUNDATION} ${LIB_IOKIT})
+target_sources(enmon PRIVATE hid.c)
