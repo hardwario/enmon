@@ -7,6 +7,9 @@
 
 int hid_open(hid_device_t *device, int vendor_id, int product_id)
 {
+    (void) vendor_id;
+    (void) product_id;
+
     *device = open("/dev/hidraw0", O_RDWR);
 
     if (*device == -1)

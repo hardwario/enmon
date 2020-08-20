@@ -1,4 +1,3 @@
-target_include_directories(enmon PRIVATE ../include)
 target_sources(enmon
     PRIVATE
         argtable3.c
