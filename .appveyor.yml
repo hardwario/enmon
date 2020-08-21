@@ -2,13 +2,26 @@ image: Visual Studio 2019
 
 platform:
   - x86
-  - x64
 
 clone_depth: 1
+
+install:
+  - nuget install secure-file -ExcludeVersion
+  - secure-file\tools\secure-file -decrypt hardwario-cert.p12.enc -out hardwario-cert.p12 -secret %enc_secret%
 
 build_script:
   - cmake .
   - cmake --build . --config Release
+  - copy Release\enmon.exe enmon-$APPVEYOR_REPO_TAG_NAME-win32.exe
 
 artifacts:
   - path: Release\enmon.exe
+
+deploy:
+- provider: GitHub
+  auth_token:
+    secure: RW37naQWH0+y6BcxGzXjo6uZeLnDeYKy4wWhS+exbiZiaslB/TOMQrdXmuLyD/AF
+  artifact: /.*\.exe/
+  force_update: true
+  on:
+    appveyor_repo_tag: true
