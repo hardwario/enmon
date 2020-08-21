@@ -1,0 +1,35 @@
+language: c
+
+os: linux
+dist: xenial
+
+jobs:
+  include:
+    - os: linux
+      dist: focal
+      addons:
+        apt:
+          - libudev-dev
+          - cmake
+      script:
+        - cmake .
+        - VERSION=${TRAVIS_TAG} cmake --build .
+        - mv enmon enmon_${TRAVIS_TAG:-vdev}_linux_x64
+        - ls -lha
+
+    - os: osx
+      script:
+        - cmake .
+        - VERSION=${TRAVIS_TAG} cmake --build .
+        - mv enmon enmon_${TRAVIS_TAG:-vdev}_darwin_x64
+        - ls -lha
+
+deploy:
+  skip_cleanup: true
+  file_glob: true
+  file: enmon_*
+  api_key: ${GITHUB_KEY}
+  provider: releases
+  overwrite: true
+  on:
+    tags: true
