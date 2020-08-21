@@ -5,6 +5,9 @@ platform:
 
 clone_depth: 1
 
+init:
+  - ps: $env:VERSION = if ($env:APPVEYOR_REPO_TAG_NAME) { $env:APPVEYOR_REPO_TAG_NAME } else { 'vdev' }
+
 install:
   - nuget install secure-file -ExcludeVersion
   - secure-file\tools\secure-file -decrypt hardwario-cert.p12.enc -out hardwario-cert.p12 -secret %enc_secret%
@@ -12,10 +15,11 @@ install:
 build_script:
   - cmake .
   - cmake --build . --config Release
-  - copy Release\enmon.exe enmon-$APPVEYOR_REPO_TAG_NAME-win32.exe
+  - copy Release\enmon.exe "enmon-%VERSION%-win32.exe"
+  - dir
 
 artifacts:
-  - path: Release\enmon.exe
+  - path: enmon*.exe
 
 deploy:
 - provider: GitHub
