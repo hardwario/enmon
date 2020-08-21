@@ -3,14 +3,9 @@ language: c
 os: linux
 dist: xenial
 
-stages:
-  - build
-  - deploy
-
 jobs:
   include:
-    - stage: build
-      os: linux
+    - os: linux
       dist: focal
       addons:
         apt:
@@ -18,32 +13,23 @@ jobs:
           - cmake
       script:
         - cmake .
-        - cmake --build .
-        - mv enmon enmon_linux_x64
+        - VERSION=${TRAVIS_TAG} cmake --build .
+        - mv enmon enmon_${TRAVIS_TAG:-vdev}_linux_x64
         - ls -lha
-      workspaces:
-        create:
-          name: linux-binaries
-          paths:
-            - enmon*
 
-    - stage: build
-      os: osx
+    - os: osx
       script:
         - cmake .
-        - cmake --build .
-        - mv enmon enmon_darwin_x64
+        - VERSION=${TRAVIS_TAG} cmake --build .
+        - mv enmon enmon_${TRAVIS_TAG:-vdev}_darwin_x64
         - ls -lha
-      workspaces:
-        create:
-          name: osx-binaries
-          paths:
-            - enmon*
 
-    - stage: deploy
-      language: minimal
-      script: ls -lha
-      workspaces:
-        use:
-          - linux-binaries
-          - osx-binaries
+deploy:
+  skip_cleanup: true
+  file_glob: true
+  file: enmon_*
+  api_key: ${GITHUB_KEY}
+  provider: releases
+  overwrite: true
+  on:
+    tags: true
