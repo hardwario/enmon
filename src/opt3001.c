@@ -60,6 +60,7 @@ int opt3001_measure(opt3001_t *ctx, float *illuminance)
 
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 1, false) != 0)
     {
+        ctx->initialized = false;
 
         return -3;
     }

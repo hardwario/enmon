@@ -77,19 +77,19 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 1, false) != 0)
     {
         ctx->initialized = false;
-        return -3;
+        return -5;
     }
 
     if (ft260_i2c_read_request(ft260, ctx->address, &buffer[1], 1, true) != 0)
     {
         ctx->initialized = false;
-        return -4;
+        return -6;
     }
 
     if (buffer[1] != 0x0e)
     {
         ctx->initialized = false;
-        return -5;
+        return -7;
     }
 
     buffer[0] = 0x01;
@@ -97,17 +97,16 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 1, false) != 0)
     {
         ctx->initialized = false;
-        return -6;
+        return -8;
     }
 
     if (ft260_i2c_read_request(ft260, ctx->address, &buffer[1], 5, true) != 0)
     {
         ctx->initialized = false;
-        return -7;
+        return -9;
     }
 
     int32_t a = buffer[1] << 24 | buffer[2] << 16 | buffer[3] << 8;
-
     *altitude = (a >> 12) / 16.f;
 
     buffer[0] = 0x26;
@@ -116,7 +115,7 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 2, true) != 0)
     {
         ctx->initialized = false;
-        return -2;
+        return -10;
     }
 
     buffer[0] = 0x13;
@@ -125,7 +124,7 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 2, true) != 0)
     {
         ctx->initialized = false;
-        return -3;
+        return -11;
     }
 
     buffer[0] = 0x26;
@@ -134,7 +133,7 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 2, true) != 0)
     {
         ctx->initialized = false;
-        return -4;
+        return -12;
     }
 
     delay(2000);
@@ -144,19 +143,19 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 1, false) != 0)
     {
         ctx->initialized = false;
-        return -3;
+        return -13;
     }
 
     if (ft260_i2c_read_request(ft260, ctx->address, &buffer[1], 1, true) != 0)
     {
         ctx->initialized = false;
-        return -4;
+        return -14;
     }
 
     if (buffer[1] != 0x0e)
     {
         ctx->initialized = false;
-        return -5;
+        return -15;
     }
 
     buffer[0] = 0x01;
@@ -164,17 +163,16 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 1, false) != 0)
     {
         ctx->initialized = false;
-        return -6;
+        return -16;
     }
 
     if (ft260_i2c_read_request(ft260, ctx->address, &buffer[1], 5, true) != 0)
     {
         ctx->initialized = false;
-        return -7;
+        return -17;
     }
 
     uint32_t p = buffer[1] << 24 | buffer[2] << 16 | buffer[3] << 8;
-
     *pressure = (p >> 12) / 4.f;
 
     return 0;

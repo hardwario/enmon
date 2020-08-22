@@ -6,6 +6,12 @@
 #include "sht20.h"
 #include "util.h"
 
+#define MEASURE_TEMPERATURE 1
+#define MEASURE_HUMIDITY 1
+#define MEASURE_ILLUMINANCE 1
+#define MEASURE_PRESSURE 1
+#define MEASURE_ALTITUDE 1
+
 int main(int argc, char **argv)
 {
     cli_t cli;
@@ -33,26 +39,32 @@ int main(int argc, char **argv)
 
     while (true)
     {
-        float temperature = NAN;
-        float humidity = NAN;
-        float illuminance = NAN;
-        float pressure = NAN;
-        float altitude = NAN;
-
         if (bridge_ping(bridge) != 0)
             break;
 
+        #if MEASURE_TEMPERATURE != 0 || MEASURE_HUMIDITY != 0
+        float temperature = NAN;
+        float humidity = NAN;
+
         sht20_measure(sht20, &temperature, &humidity);
 
+        #if MEASURE_TEMPERATURE != 0
         if (isnan(temperature))
             say("@SENSOR: \"Temperature\",NULL");
         else
             say("@SENSOR: \"Temperature\",%.2f", temperature);
+        #endif
 
+        #if MEASURE_HUMIDITY != 0
         if (isnan(humidity))
             say("@SENSOR: \"Humidity\",NULL");
         else
             say("@SENSOR: \"Humidity\",%.1f", humidity);
+        #endif
+        #endif
+
+        #if MEASURE_ILLUMINANCE != 0
+        float illuminance = NAN;
 
         opt3001_measure(opt3001, &illuminance);
 
@@ -60,18 +72,28 @@ int main(int argc, char **argv)
             say("@SENSOR: \"Illuminance\",NULL");
         else
             say("@SENSOR: \"Illuminance\",%.0f", illuminance);
+        #endif
+
+        #if MEASURE_PRESSURE != 0 || MEASURE_ALTITUDE != 0
+        float pressure = NAN;
+        float altitude = NAN;
 
         mpl3115a2_measure(mpl3115a2, &pressure, &altitude);
 
+        #if MEASURE_PRESSURE != 0
         if (isnan(pressure))
             say("@SENSOR: \"Pressure\",NULL");
         else
             say("@SENSOR: \"Pressure\",%.0f", pressure);
+        #endif
 
+        #if MEASURE_ALTITUDE != 0
         if (isnan(altitude))
             say("@SENSOR: \"Altitude\",NULL");
         else
             say("@SENSOR: \"Altitude\",%.1f", altitude);
+        #endif
+        #endif
 
         if (!cli.loop)
             break;

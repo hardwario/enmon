@@ -20,7 +20,7 @@ int ft260_set_i2c_mode(ft260_t *ctx);
 int ft260_set_uart_mode(ft260_t *ctx);
 int ft260_i2c_reset(ft260_t *ctx);
 int ft260_set_i2c_clock_speed(ft260_t *ctx);
-int ft260_get_i2c_status(ft260_t *ctx, uint8_t **status);
+int ft260_get_i2c_status(ft260_t *ctx, uint8_t *status);
 int ft260_i2c_write_request(ft260_t *ctx, uint8_t address, const uint8_t *buffer, size_t length, bool stop);
 int ft260_i2c_read_request(ft260_t *ctx, uint8_t address, uint8_t *buffer, size_t length, bool restart);
 

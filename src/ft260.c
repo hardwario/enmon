@@ -162,7 +162,7 @@ int ft260_set_i2c_clock_speed(ft260_t *ctx)
     return 0;
 }
 
-int ft260_get_i2c_status(ft260_t *ctx, uint8_t **status)
+int ft260_get_i2c_status(ft260_t *ctx, uint8_t *status)
 {
     uint8_t *data = calloc(1, 64);
 
@@ -174,17 +174,18 @@ int ft260_get_i2c_status(ft260_t *ctx, uint8_t **status)
     if (hid_feature_in(ctx->device, data, 64) != 5)
     {
         free(data);
-        return -1;
+        return -2;
     }
 
     if (data[0] != 0xc0)
     {
         free(data);
-        return -2;
+        return -3;
     }
 
-    *status = data;
+    *status = data[1];
 
+    free(data);
     return 0;
 }
 
@@ -192,42 +193,34 @@ static int _ft260_i2c_wait(ft260_t *ctx, bool accept_bus_busy)
 {
     while (true)
     {
-        uint8_t *status;
+        uint8_t status;
+
+        delay(10);
 
         if (ft260_get_i2c_status(ctx, &status) != 0)
             return -1;
 
-        if ((status[1] & 0x01) == 0)
+        if ((status & 0x01) == 0)
         {
-            if ((status[1] & 0x1e) != 0)
-            {
-                free(status);
+            if ((status & 0x1e) != 0)
                 return -2;
-            }
 
             if (accept_bus_busy)
             {
-                if ((status[1] & 0x40) == 0)
-                {
-                    free(status);
+                if ((status & 0x40) == 0)
                     return -3;
-                }
             }
             else
             {
-                if ((status[1] & 0x20) == 0)
-                {
-                    free(status);
+                if ((status & 0x40) != 0)
+                    continue;
+
+                if ((status & 0x20) == 0)
                     return -4;
-                }
             }
 
-            free(status);
             break;
         }
-
-        free(status);
-        delay(10);
     }
 
     return 0;

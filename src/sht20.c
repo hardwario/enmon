@@ -43,7 +43,7 @@ int sht20_measure(sht20_t *ctx, float *temperature, float *humidity)
         delay(100);
     }
 
-    buffer[0] = 0xf3;
+    buffer[0] = 0xe3;
 
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 1, true) != 0)
     {
@@ -51,8 +51,6 @@ int sht20_measure(sht20_t *ctx, float *temperature, float *humidity)
 
         return -2;
     }
-
-    delay(100);
 
     if (ft260_i2c_read_request(ft260, ctx->address, buffer, 2, false) != 0)
     {
@@ -64,7 +62,7 @@ int sht20_measure(sht20_t *ctx, float *temperature, float *humidity)
     uint16_t t = buffer[0] << 8 | buffer[1];
     *temperature = -46.85f + 175.72f * (float) t / 65536.f;
 
-    buffer[0] = 0xf5;
+    buffer[0] = 0xe5;
 
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 1, true) != 0)
     {
@@ -72,8 +70,6 @@ int sht20_measure(sht20_t *ctx, float *temperature, float *humidity)
 
         return -4;
     }
-
-    delay(100);
 
     if (ft260_i2c_read_request(ft260, ctx->address, buffer, 2, false) != 0)
     {
