@@ -15,7 +15,7 @@ install:
 build_script:
   - cmake .
   - cmake --build . --config Release
-  - copy Release\enmon.exe "enmon-%VERSION%-win32.exe"
+  - copy Release\enmon.exe "enmon_%VERSION%_win32.exe"
   - dir
 
 artifacts:
