@@ -14,7 +14,7 @@ jobs:
       script:
         - mkdir build
         - cd build
-        - cmake -B . -S ..
+        - cmake ..
         - VERSION=${TRAVIS_TAG} cmake --build .
         - mv enmon enmon_${TRAVIS_TAG:-vdev}_linux_x64
         - ls -lha
@@ -23,7 +23,7 @@ jobs:
       script:
         - mkdir build
         - cd build
-        - cmake -B . -S ..
+        - cmake ..
         - VERSION=${TRAVIS_TAG} cmake --build .
         - mv enmon enmon_${TRAVIS_TAG:-vdev}_darwin_x64
         - ls -lha
