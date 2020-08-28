@@ -19,8 +19,7 @@ int hid_open(hid_device_t *device, int vendor_id, int product_id)
 
     struct udev_enumerate *enumerate;
     struct udev_list_entry *entry, *devices_hid;
-    struct udev_device *hid_dev;
-    struct udev_device *usb_dev;
+    struct udev_device *hid_dev, *usb_dev, *intf_dev;
     const char *str;
 
     enumerate = udev_enumerate_new(udev);
@@ -51,9 +50,24 @@ int hid_open(hid_device_t *device, int vendor_id, int product_id)
             continue;
         }
 
-        hid_path = strdup(udev_device_get_devnode(hid_dev));
-        udev_device_unref(hid_dev);
-        break;
+        intf_dev = udev_device_get_parent_with_subsystem_devtype(hid_dev, "usb", "usb_interface");
+
+        if (intf_dev == NULL)
+        {
+            udev_device_unref(hid_dev);
+            continue;
+        }
+
+        str = udev_device_get_sysattr_value(intf_dev, "bInterfaceNumber");
+        int interface_number = (str)? strtol(str, NULL, 16): -1;
+
+
+        if (interface_number == 0)
+        {
+            hid_path = strdup(udev_device_get_devnode(hid_dev));
+            udev_device_unref(hid_dev);
+            break;
+        }
     }
 
     udev_enumerate_unref(enumerate);
