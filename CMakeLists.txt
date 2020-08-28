@@ -2,9 +2,15 @@ cmake_minimum_required(VERSION 3.13)
 
 project(enmon LANGUAGES C)
 
-if(ENV{VERSION})
-    add_definitions(-DVERSION="$ENV{VERSION}")
+set(VERSION "vdev")
+
+if(DEFINED ENV{VERSION})
+    set(VERSION $ENV{VERSION})
 endif()
+
+message(STATUS "version ${VERSION}")
+
+add_definitions(-DVERSION="${VERSION}")
 
 add_executable(enmon)
 add_subdirectory(src)
