@@ -31,7 +31,9 @@ jobs:
 deploy:
   skip_cleanup: true
   file_glob: true
-  file: build/enmon_*
+  file:
+    - build/enmon_*
+    - enmon_*
   api_key: ${GITHUB_KEY}
   provider: releases
   overwrite: true
