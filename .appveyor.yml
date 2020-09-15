@@ -2,6 +2,9 @@ image: Visual Studio 2019
 
 platform:
   - x86
+  
+environment:
+  SIGNTOOL: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\signtool.exe
 
 clone_depth: 1
 
@@ -13,10 +16,17 @@ install:
   - secure-file\tools\secure-file -decrypt hardwario-cert.p12.enc -out hardwario-cert.p12 -secret %enc_secret%
 
 build_script:
-  - cmake .
-  - cmake --build . --config Release
-  - copy Release\enmon.exe "enmon_%VERSION%_win32.exe"
-  - dir
+  - cmd: >-
+      cmake .
+      
+      cmake --build . --config Release
+      
+      copy Release\enmon.exe "enmon_%VERSION%_win32.exe"
+      
+      dir
+   
+      "%SIGNTOOL%" sign /t http://timestamp.digicert.com /f hardwario-cert.p12 /p %CSC_KEY_PASSWORD% "enmon_%VERSION%_win32.exe"
+      
 
 artifacts:
   - path: enmon*.exe
