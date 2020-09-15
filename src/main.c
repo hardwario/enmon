@@ -4,6 +4,7 @@
 #include "mpl3115a2.h"
 #include "opt3001.h"
 #include "sht20.h"
+#include "sht30.h"
 #include "util.h"
 
 #define MEASURE_TEMPERATURE 1
@@ -21,6 +22,11 @@ int main(int argc, char **argv)
 
     if (bridge == NULL)
         die("Call `bridge_new` failed");
+
+    sht30_t *sht30 = sht30_new(bridge, 0, 0x45);
+
+    if (sht30 == NULL)
+        die("Call `sht30_new` failed");
 
     sht20_t *sht20 = sht20_new(bridge, 0, 0x40);
 
@@ -43,10 +49,14 @@ int main(int argc, char **argv)
             break;
 
         #if MEASURE_TEMPERATURE != 0 || MEASURE_HUMIDITY != 0
+
         float temperature = NAN;
         float humidity = NAN;
 
-        sht20_measure(sht20, &temperature, &humidity);
+        sht30_measure(sht30, &temperature, &humidity);
+
+        if (isnan(temperature) && isnan(humidity))
+            sht20_measure(sht20, &temperature, &humidity);
 
         #if MEASURE_TEMPERATURE != 0
         if (isnan(temperature))
@@ -61,6 +71,7 @@ int main(int argc, char **argv)
         else
             say("@SENSOR: \"Humidity\",%.1f", humidity);
         #endif
+
         #endif
 
         #if MEASURE_ILLUMINANCE != 0

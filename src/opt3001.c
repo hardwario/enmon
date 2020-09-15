@@ -85,14 +85,14 @@ int opt3001_measure(opt3001_t *ctx, float *illuminance)
     {
         ctx->initialized = false;
 
-        return -3;
+        return -6;
     }
 
     if (ft260_i2c_read_request(ft260, ctx->address, &buffer[1], 2, true) != 0)
     {
         ctx->initialized = false;
 
-        return -4;
+        return -7;
     }
 
     uint16_t r = buffer[1] << 8 | buffer[2];

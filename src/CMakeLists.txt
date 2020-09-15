@@ -8,6 +8,7 @@ target_sources(enmon
         mpl3115a2.c
         opt3001.c
         sht20.c
+        sht30.c
         util.c
 )
 if(WIN32)

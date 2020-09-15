@@ -242,10 +242,10 @@ int ft260_i2c_write_request(ft260_t *ctx, uint8_t address, const uint8_t *buffer
     memcpy(&data[4], buffer, length);
 
     if (hid_interrupt_out(ctx->device, data, sizeof(data)) != sizeof(data))
-        return -2;
+        return -1;
 
     if (_ft260_i2c_wait(ctx, stop ? false : true) != 0)
-        return -3;
+        return -2;
 
     return 0;
 }
