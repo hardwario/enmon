@@ -7,6 +7,7 @@ jobs:
   include:
     - os: linux
       dist: focal
+      arch: amd64
       addons:
         apt:
           - libudev-dev
@@ -17,6 +18,21 @@ jobs:
         - VERSION=${TRAVIS_TAG} cmake ..
         - cmake --build .
         - mv enmon enmon_${TRAVIS_TAG:-vdev}_linux_x64
+        - ls -lha
+
+    - os: linux
+      dist: focal
+      arch: arm64
+      addons:
+        apt:
+          - libudev-dev
+          - cmake
+      script:
+        - mkdir build
+        - cd build
+        - VERSION=${TRAVIS_TAG} cmake ..
+        - cmake --build .
+        - mv enmon enmon_${TRAVIS_TAG:-vdev}_linux_arm64
         - ls -lha
 
     - os: osx
