@@ -63,19 +63,15 @@ int hid_open(hid_device_t *device, int vendor_id, int product_id)
         {
             if (product_id == attributes.ProductID && vendor_id == attributes.VendorID)
             {
-                PHIDP_PREPARSED_DATA pp_data;
-
-                if (HidD_GetPreparsedData(handle, &pp_data) == TRUE)
+                char* pos = strstr(device_interface_detail_data->DevicePath, "&mi_");
+                if (pos)
                 {
-                    HIDP_CAPS caps;
-
-                    if (HidP_GetCaps(pp_data, &caps) == HIDP_STATUS_SUCCESS)
-                    {
-                        if (caps.Usage == 1)
-                            found = true;
+                    char* hex_str = pos + 4;
+                    char* endptr = NULL;
+                    int mi = strtol(hex_str, &endptr, 16);
+                    if ((endptr != hex_str) && mi == 0) {
+                        found = true;
                     }
-
-                    HidD_FreePreparsedData(pp_data);
                 }
             }
         }
