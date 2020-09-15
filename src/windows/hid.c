@@ -63,15 +63,17 @@ int hid_open(hid_device_t *device, int vendor_id, int product_id)
         {
             if (product_id == attributes.ProductID && vendor_id == attributes.VendorID)
             {
-                char* pos = strstr(device_interface_detail_data->DevicePath, "&mi_");
-                if (pos)
+                char *pos = strstr(device_interface_detail_data->DevicePath, "&mi_");
+
+                if (pos != NULL)
                 {
-                    char* hex_str = pos + 4;
-                    char* endptr = NULL;
-                    int mi = strtol(hex_str, &endptr, 16);
-                    if ((endptr != hex_str) && mi == 0) {
+                    char *hex_str = pos + 4;
+                    char *end_ptr = NULL;
+
+                    int mi = strtol(hex_str, &end_ptr, 16);
+
+                    if (end_ptr != hex_str && mi == 0)
                         found = true;
-                    }
                 }
             }
         }
