@@ -33,8 +33,8 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
 
     if (!ctx->initialized)
     {
-        buffer[0] = 0x26;
-        buffer[1] = 0x04;
+        buffer[0] = 0x26; /* CTRL_REG1 */
+        buffer[1] = 0x04; /* Reset device */
 
         ft260_i2c_write_request(ft260, ctx->address, buffer, 2, true);
 
@@ -43,8 +43,8 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
         delay(2000);
     }
 
-    buffer[0] = 0x26;
-    buffer[1] = 0xb8;
+    buffer[0] = 0x26; /* CTRL_REG1 */
+    buffer[1] = 0xb8; /* Set altimeter mode, set oversampling 2^7 = 128 */
 
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 2, true) != 0)
     {
@@ -52,8 +52,8 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
         return -2;
     }
 
-    buffer[0] = 0x13;
-    buffer[1] = 0x07;
+    buffer[0] = 0x13; /* PT_DATA_CFG */
+    buffer[1] = 0x07; /* Activate pressure, temperature and event flag generator */
 
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 2, true) != 0)
     {
@@ -61,8 +61,8 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
         return -3;
     }
 
-    buffer[0] = 0x26;
-    buffer[1] = 0xba;
+    buffer[0] = 0x26; /* CTRL_REG1 */
+    buffer[1] = 0xba; /* Initiate altitute measurement */
 
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 2, true) != 0)
     {
@@ -70,9 +70,10 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
         return -4;
     }
 
+    /* Measurement delay */
     delay(2000);
 
-    buffer[0] = 0x00;
+    buffer[0] = 0x00; /* STATUS */
 
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 1, false) != 0)
     {
@@ -86,13 +87,14 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
         return -6;
     }
 
+    /* Check for new pressure or temperature data ready bit is set */
     if (buffer[1] != 0x0e)
     {
         ctx->initialized = false;
         return -7;
     }
 
-    buffer[0] = 0x01;
+    buffer[0] = 0x01; /* Pressure data MSB register */
 
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 1, false) != 0)
     {
@@ -100,6 +102,7 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
         return -8;
     }
 
+    /* Read 5 bytes, 3 for altitude and 2 for temperature */
     if (ft260_i2c_read_request(ft260, ctx->address, &buffer[1], 5, true) != 0)
     {
         ctx->initialized = false;
@@ -109,8 +112,8 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
     int32_t a = buffer[1] << 24 | buffer[2] << 16 | buffer[3] << 8;
     *altitude = (a >> 12) / 16.f;
 
-    buffer[0] = 0x26;
-    buffer[1] = 0x38;
+    buffer[0] = 0x26; /* CTRL_REG1 */
+    buffer[1] = 0x38; /* Set pressure mode, set oversampling 2^7 = 128 */
 
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 2, true) != 0)
     {
@@ -118,8 +121,8 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
         return -10;
     }
 
-    buffer[0] = 0x13;
-    buffer[1] = 0x07;
+    buffer[0] = 0x13; /* PT_DATA_CFG */
+    buffer[1] = 0x07; /* Activate pressure, temperature and event flag generator */
 
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 2, true) != 0)
     {
@@ -127,8 +130,8 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
         return -11;
     }
 
-    buffer[0] = 0x26;
-    buffer[1] = 0x3a;
+    buffer[0] = 0x26; /* CTRL_REG1 */
+    buffer[1] = 0x3a; /* Initiate pressure measurement */
 
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 2, true) != 0)
     {
@@ -136,9 +139,10 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
         return -12;
     }
 
+    /* Measurement delay */
     delay(2000);
 
-    buffer[0] = 0x00;
+    buffer[0] = 0x00; /* STATUS */
 
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 1, false) != 0)
     {
@@ -152,13 +156,14 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
         return -14;
     }
 
+    /* Check for new pressure or temperature data ready bit is set */
     if (buffer[1] != 0x0e)
     {
         ctx->initialized = false;
         return -15;
     }
 
-    buffer[0] = 0x01;
+    buffer[0] = 0x01; /* Pressure data MSB register */
 
     if (ft260_i2c_write_request(ft260, ctx->address, buffer, 1, false) != 0)
     {
@@ -166,6 +171,7 @@ int mpl3115a2_measure(mpl3115a2_t *ctx, float *pressure, float *altitude)
         return -16;
     }
 
+    /* Read 5 bytes, 3 for pressure and 2 for temperature */
     if (ft260_i2c_read_request(ft260, ctx->address, &buffer[1], 5, true) != 0)
     {
         ctx->initialized = false;
